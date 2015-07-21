@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var auth = require('http-auth');
+var request = require('request');
 var basic = auth.basic({
 	realm: 'settings'
 }, function(username, password, callback) {
@@ -10,15 +11,16 @@ var basic = auth.basic({
 var Token = require('../model/token');
 var connectors = require('../connectors/connectors');
 
+
 function getHtmlLink(label, url) {
 	return '<a href="' + url + '">' + label + '</a>';
 }
 
 router.get('/', auth.connect(basic), function(req, res, next) {
 	var services = {
-		'fitbit': getHtmlLink('Connect', connectors.fitbit.authRequestUrl('/admin/fitbit')),
-		'jawbone': getHtmlLink('Connect', connectors.jawbone.authRequestUrl('/admin/jawbone')),
-		'strava': getHtmlLink('Connect', connectors.strava.authRequestUrl('/admin/strava'))
+		'fitbit': getHtmlLink('Connect Fitbit', connectors.fitbit.authRequestUrl('/admin/fitbit')),
+		'jawbone': getHtmlLink('Connect Jawbone', connectors.jawbone.authRequestUrl('/admin/jawbone')),
+		'strava': getHtmlLink('Connect Strava', connectors.strava.authRequestUrl('/admin/strava'))
 	};
 	Token.find({}, function(err, tokens) {
 		if (err) return next(err);
@@ -27,7 +29,48 @@ router.get('/', auth.connect(basic), function(req, res, next) {
 		}
 		res.render('admin', services);
 	});
-	
+});
+
+function doTokenExchange(url, params, service, res, next) {
+	request.post({url: url, form: params}, function(err, response, body) {
+		if (err) return next(err);
+		var json = JSON.parse(body);
+		Token.findOneAndUpdate(
+			{service: service},
+			{accessToken: json.access_token,
+			 refreshToken: json.refresh_token},
+			{upsert: true},
+			function(err) {
+				if (err) return next(err);
+				res.redirect('/admin');
+			});
+	});
+}
+
+router.get('/fitbit', function(req, res, next) {
+	// Fitbit wants an Authorization header during the token exchange
+	res.send('coming soon');
+});
+
+router.get('/jawbone', function(req, res, next) {
+	var url = 'https://jawbone.com/auth/oauth2/token';
+	var params = {
+		'client_id': globalConfig.jawbone.client_id,
+		'client_secret': globalConfig.jawbone.client_secret,
+		'grant_type': 'authorization_code',
+		'code': req.query.code
+	};
+	doTokenExchange(url, params, 'jawbone', res, next);
+});
+
+router.get('/strava', function(req, res, next) {
+	var url = 'https://www.strava.com/oauth/token';
+	var params = {
+		'client_id': globalConfig.strava.client_id,
+		'client_secret': globalConfig.strava.client_secret,
+		'code': req.query.code
+	};
+	doTokenExchange(url, params, 'strava', res, next);
 });
 
 module.exports = router;
