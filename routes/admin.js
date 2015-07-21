@@ -31,10 +31,14 @@ router.get('/', auth.connect(basic), function(req, res, next) {
 	});
 });
 
-function doTokenExchange(url, params, service, res, next) {
-	request.post({url: url, form: params}, function(err, response, body) {
+function doTokenExchange(url, params, service, res, next, headers) {
+	request.post({url: url, form: params, headers: headers}, function(err, response, body) {
 		if (err) return next(err);
 		var json = JSON.parse(body);
+		if (!json.access_token) {
+			console.log(json);
+			return next(new Error('Access token is null'));
+		}
 		Token.findOneAndUpdate(
 			{service: service},
 			{accessToken: json.access_token,
@@ -49,7 +53,16 @@ function doTokenExchange(url, params, service, res, next) {
 
 router.get('/fitbit', function(req, res, next) {
 	// Fitbit wants an Authorization header during the token exchange
-	res.send('coming soon');
+	var url = 'https://api.fitbit.com/oauth2/token';
+	var params = {
+		'client_id': globalConfig.fitbit.client_id,
+		'grant_type': 'authorization_code',
+		'code': req.query.code,
+		'redirect_uri': globalConfig.oauth_redirect_base + '/admin/fitbit'
+	};
+	var authHeader = new Buffer(globalConfig.fitbit.client_id + ':' +
+		globalConfig.fitbit.client_secret).toString('base64');
+	doTokenExchange(url, params, 'fitbit', res, next, {'Authorization': 'Basic ' + authHeader});
 });
 
 router.get('/jawbone', function(req, res, next) {
