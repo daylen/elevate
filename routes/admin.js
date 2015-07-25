@@ -86,4 +86,18 @@ router.get('/strava', function(req, res, next) {
 	doTokenExchange(url, params, 'strava', res, next);
 });
 
+router.post('/sync', function(req, res, next) {
+	var service = req.body.service;
+	console.log('[Debug] Triggering sync for ' + service);
+	// Note: crawl() could throw an error
+	if (service == 'fitbit') {
+		connectors.fitbit.crawl();
+	} else if (service == 'jawbone') {
+		connectors.jawbone.crawl();
+	} else if (service == 'strava') {
+		connectors.strava.crawl();
+	}
+	res.redirect('/admin');
+});
+
 module.exports = router;
