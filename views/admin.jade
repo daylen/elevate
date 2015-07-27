@@ -12,8 +12,8 @@ block content
 	p Force Elevate to sync now.
 	form(action="/admin/sync" method="post")
 		select(name="service")
-			//- option(value="fitbit") Fitbit
-			//- option(value="jawbone") Jawbone
+			option(value="fitbit") Fitbit
+			option(value="jawbone") Jawbone
 			option(value="strava") Strava
 		span &nbsp;
 		input(type="submit" value="Sync Now")
