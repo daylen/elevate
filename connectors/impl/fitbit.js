@@ -106,6 +106,9 @@ function _fetchFitbitData(accessToken, callback) {
 			function(err, response, body) {
 				if (err) return callback(err);
 				var json = JSON.parse(body);
+				if (json.errors) {
+					return callback(new Error(JSON.stringify(json.errors)));
+				}
 				data.push(json);
 				callback();
 			});
