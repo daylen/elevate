@@ -67,7 +67,7 @@ function _crawlStravaActivities(accessToken, pageNum, callback) {
 			console.log('Should crawl next page: ' + shouldCrawlNextPage);
 			if (shouldCrawlNextPage) {
 				// Recursion, because why not
-				_crawlStravaActivities(accessToken, pageNum + 1);
+				_crawlStravaActivities(accessToken, pageNum + 1, callback);
 			} else {
 				callback();
 			}
