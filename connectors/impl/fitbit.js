@@ -34,11 +34,18 @@ module.exports.crawl = function(callback) {
 	Token.findOne({service: 'fitbit'}, function(err, token) {
 		if (err) return callback(err);
 		if (!token) return callback(new Error('Service is not connected'));
-		_verifyAccessToken(token, callback);
+		_verifyAccessToken(token, function(err) {
+			_log('Finished crawling');
+			callback(err);
+		});
 	});
 };
 
 // Private
+
+function _log(str) {
+	console.log('[Fitbit] ' + str);
+}
 
 function _getClientAuthHeader() {
 	var str = new Buffer(globalConfig.fitbit.client_id + ':' +
@@ -47,7 +54,7 @@ function _getClientAuthHeader() {
 }
 
 function _refreshAccessToken(refreshToken, callback) {
-	console.log('Refreshing access token');
+	_log('Refreshing access token');
 	var url = "https://api.fitbit.com/oauth2/token";
 	var params = {
 		grant_type: 'refresh_token',
@@ -59,7 +66,7 @@ function _refreshAccessToken(refreshToken, callback) {
 }
 
 function _verifyAccessToken(token, callback) {
-	console.log('Verifying token');
+	_log('Verifying token');
 	var authHeader = {'Authorization': 'Bearer ' + token.accessToken};
 	request.get({url: "https://api.fitbit.com/1/user/-/devices.json", headers: authHeader},
 		function(err, response, body) {
@@ -69,7 +76,9 @@ function _verifyAccessToken(token, callback) {
 					if (err) return callback(err);
 					module.exports.crawl(callback);
 				});
-			console.log('Verified');
+			if (response.statusCode == 429)
+				return callback(new Error('Reached rate limit'));
+			_log('Verified');
 			_fetchFitbitData(token.accessToken, callback);
 		});
 }
@@ -90,7 +99,6 @@ function _fetchFitbitData(accessToken, callback) {
 		'activityCalories'
 	];
 	var urls = fragments.map( s => "https://api.fitbit.com/1/user/-/activities/" + s + "/date/today/1y.json");
-	console.log(urls);
 	var authHeader = {'Authorization': 'Bearer ' + accessToken};
 	var data = [];
 	async.each(urls, function(url, callback) {

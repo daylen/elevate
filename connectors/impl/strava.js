@@ -38,8 +38,12 @@ module.exports.crawl = function(callback) {
 
 // Private
 
+function _log(str) {
+	console.log('[Strava] ' + str);
+}
+
 function _crawlStravaActivities(accessToken, pageNum, callback) {
-	console.log('Crawling Strava page ' + pageNum);
+	_log('Crawling Strava page ' + pageNum);
 	var base = "https://www.strava.com/api/v3/athlete/activities?";
 	var params = {
 		access_token: accessToken,
@@ -48,7 +52,7 @@ function _crawlStravaActivities(accessToken, pageNum, callback) {
 	request.get({url: base, qs: params}, function(err, response, body) {
 		if (err) return callback(err);
 		var activities = JSON.parse(body);
-		console.log('Got ' + activities.length + ' activities');
+		_log('Got ' + activities.length + ' activities');
 		var shouldCrawlNextPage = false;
 
 		async.each(activities, function(activity, callback) {
@@ -56,19 +60,18 @@ function _crawlStravaActivities(accessToken, pageNum, callback) {
 				{'new': false, upsert: true}, function(err, doc) {
 					if (err) return callback(err);
 					if (!doc) {
-						console.log('Adding new activity!');
+						_log('Adding new activity!');
 						shouldCrawlNextPage = true;
 					}
 					callback();
 				});
 		}, function(err) {
 			if (err) return callback(err);
-			console.log('Done with this page');
-			console.log('Should crawl next page: ' + shouldCrawlNextPage);
 			if (shouldCrawlNextPage) {
 				// Recursion, because why not
 				_crawlStravaActivities(accessToken, pageNum + 1, callback);
 			} else {
+				_log('Finished crawling');
 				callback();
 			}
 		});

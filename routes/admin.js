@@ -55,10 +55,7 @@ router.get('/strava', function(req, res, next) {
 });
 
 router.post('/sync', function(req, res, next) {
-	var service = req.body.service;
-	console.log('[Debug] Triggering sync for ' + service);
-	var connector = connectors[service];
-	connector.crawl(function(err) {
+	connectors.crawlNow(function(err) {
 		if (err) return next(err);
 		res.redirect('/admin');	
 	});

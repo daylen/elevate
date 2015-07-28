@@ -9,6 +9,8 @@ globalConfig = require('node-yaml-config').load(__dirname + '/config/custom.yml'
 var mongoose = require('mongoose');
 mongoose.connect(globalConfig.mongodb_url);
 
+require('./connectors').enableBackgroundCrawl();
+
 var api = require('./routes/api');
 var admin = require('./routes/admin');
 
