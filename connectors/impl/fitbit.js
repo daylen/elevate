@@ -4,6 +4,7 @@ var Fitbit = require('../../model/fitbit');
 var request = require('request');
 var shared = require('../shared');
 var async = require('async');
+var _ = require('underscore');
 
 // Public
 
@@ -69,11 +70,11 @@ function _verifyAccessToken(token, callback) {
 					module.exports.crawl(callback);
 				});
 			console.log('Verified');
-			_crawlFitbitData(token.accessToken, callback);
+			_fetchFitbitData(token.accessToken, callback);
 		});
 }
 
-function _crawlFitbitData(accessToken, callback) {
+function _fetchFitbitData(accessToken, callback) {
 	var fragments = [
 		'calories',
 		'caloriesBMR',
@@ -91,18 +92,60 @@ function _crawlFitbitData(accessToken, callback) {
 	var urls = fragments.map( s => "https://api.fitbit.com/1/user/-/activities/" + s + "/date/today/1y.json");
 	console.log(urls);
 	var authHeader = {'Authorization': 'Bearer ' + accessToken};
+	var data = [];
 	async.each(urls, function(url, callback) {
 		request.get({url: url, headers: authHeader},
 			function(err, response, body) {
 				if (err) return callback(err);
 				var json = JSON.parse(body);
-				console.log(json);
+				data.push(json);
 				callback();
-				// TODO store this data
 			});
 	}, function(err) {
 		if (err) return callback(err);
-		console.log('Done');
-		callback();
+		var transformed = _transformFitbitData(data);
+		_storeTransformedData(transformed, callback);
 	});
+}
+
+/*
+Input:
+[{calories: [{date: 2015-01-01, value: 2000}, ...]},
+ {steps: [{date: 2015-01-01, value: 10000}, ...]},
+ ...]
+
+Output:
+[{date: 2015-01-01, calories: 2000, steps: 10000, ...},
+ {date: 2015-01-02, calories: 2000, steps: 10000, ...},
+ ...]
+*/
+function _transformFitbitData(data) {
+	var dataObj = data.reduce(function(acc, x) {
+		for (var key in x) acc[key] = x[key];
+		return acc;
+	}, {});
+	var justDatapoints = [];
+	for (var measurementName in dataObj) {
+		for (var datapoint of dataObj[measurementName]) {
+			datapoint[measurementName.substring(measurementName.indexOf('-') + 1)] = datapoint.value;
+			datapoint.dateTime = new Date(datapoint.dateTime);
+			delete datapoint.value;
+		}
+		justDatapoints.push(dataObj[measurementName]);
+	}
+	var groupedObj = _.groupBy(_.flatten(justDatapoints), 'dateTime');
+	var reducedObj = _.mapObject(groupedObj, function(val, key) {
+		return val.reduce(function(acc, x) {
+			for (var key in x) acc[key] = x[key];
+			return acc;
+		}, {});
+	});
+	return _.filter(_.values(reducedObj), function(x) { return x.steps > 0; });
+}
+
+function _storeTransformedData(arr, callback) {
+	async.each(arr, function(summary, callback) {
+		Fitbit.findOneAndUpdate({dateTime: summary.dateTime}, summary,
+			{upsert: true}, callback);
+	}, callback);
 }

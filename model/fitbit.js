@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 var fitbitSchema = mongoose.Schema({
-	date: Date,
+	dateTime: Date,
 	// calories
 	calories: Number,
 	caloriesBMR: Number, // resting calories
@@ -13,8 +13,7 @@ var fitbitSchema = mongoose.Schema({
 	floors: Number,
 	elevation: Number,
 	// heart
-	restingHeartRate: Number,
-	heartRateZones: Array,
+	heart: mongoose.Schema.Types.Mixed,
 	// minutes
 	minutesSedentary: Number,
 	minutesLightlyActive: Number,
