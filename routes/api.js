@@ -18,6 +18,7 @@ router.get('/activity', function(req, res, next) {
 		});
 	});
 	
+	// TODO
 });
 
 module.exports = router;

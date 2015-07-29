@@ -8,7 +8,6 @@ block content
 		li Fitbit: !{fitbit}
 		li Jawbone: !{jawbone}
 		li Strava: !{strava}
-	h2 [Debug] Force sync
-	p Force Elevate to sync now with all connected services.
-	form(action="/admin/sync" method="post")
-		input(type="submit" value="Sync Now")
+	h2 [Debug] Force crawl
+	form(action="/admin/crawl" method="post")
+		input(type="submit" value="Crawl Now")

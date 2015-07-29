@@ -9,12 +9,14 @@ globalConfig = require('node-yaml-config').load(__dirname + '/config/custom.yml'
 var mongoose = require('mongoose');
 mongoose.connect(globalConfig.mongodb_url);
 
-require('./connectors').enableBackgroundCrawl();
-
 var api = require('./routes/api');
 var admin = require('./routes/admin');
 
 var app = express();
+
+if (!(app.get('env') === 'development')) {
+  require('./connectors').enableBackgroundCrawl();
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

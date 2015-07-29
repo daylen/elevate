@@ -11,7 +11,7 @@ module.exports.getAuthUrl = function(redirectFragment) {
 		'scope': 'basic_read extended_read location_read friends_read mood_read move_read sleep_read meal_read weight_read generic_event_read heartrate_read'
 	};
 	return base + querystring.stringify(params);
-}
+};
 
 module.exports.doTokenExchange = function(authCode, callback) {
 	var url = 'https://jawbone.com/auth/oauth2/token';
@@ -22,13 +22,18 @@ module.exports.doTokenExchange = function(authCode, callback) {
 		'code': authCode
 	};
 	shared.doTokenExchange(url, params, {}, 'jawbone', callback);
-}
+};
+
+module.exports.backfill = function(callback) {
+	callback();
+	// TODO
+};
 
 module.exports.crawl = function(callback) {
 	Token.findOne({service: 'jawbone'}, function(err, token) {
 		if (err) return callback(err);
-		if (!token) return callback(new Error('Service is not connected'));
+		if (!token) return callback();
 		// TODO
-		callback(new Error('Not implemented'));
+		callback();
 	});
-}
+};

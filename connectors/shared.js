@@ -19,4 +19,4 @@ module.exports.doTokenExchange =
 			 refreshToken: json.refresh_token},
 			{upsert: true}, callback);
 	});
-}
+};

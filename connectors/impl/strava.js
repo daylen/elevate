@@ -16,7 +16,7 @@ module.exports.getAuthUrl = function(redirectFragment) {
 		'scope': 'view_private'
 	};
 	return base + querystring.stringify(params);
-}
+};
 
 module.exports.doTokenExchange = function(authCode, callback) {
 	var url = 'https://www.strava.com/oauth/token';
@@ -26,15 +26,19 @@ module.exports.doTokenExchange = function(authCode, callback) {
 		'code': authCode
 	};
 	shared.doTokenExchange(url, params, {}, 'strava', callback);
-}
+};
+
+module.exports.backfill = function(callback) {
+	module.exports.crawl(callback);
+};
 
 module.exports.crawl = function(callback) {
 	Token.findOne({service: 'strava'}, function(err, token) {
 		if (err) return callback(err);
-		if (!token) return callback(new Error('Service is not connected'));
+		if (!token) return callback();
 		_crawlStravaActivities(token.accessToken, 1, callback);
 	});
-}
+};
 
 // Private
 
