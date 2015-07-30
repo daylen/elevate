@@ -4,6 +4,7 @@ var Strava = require('../../model/strava');
 var request = require('request');
 var async = require('async');
 var shared = require('../shared');
+var logger = require('../../logger');
 
 // Public
 
@@ -43,7 +44,7 @@ module.exports.crawl = function(callback) {
 // Private
 
 function _log(str) {
-	console.log('[Strava] ' + str);
+	logger.info('[Strava] ' + str);
 }
 
 function _crawlStravaActivities(accessToken, pageNum, callback) {
@@ -55,7 +56,12 @@ function _crawlStravaActivities(accessToken, pageNum, callback) {
 	};
 	request.get({url: base, qs: params}, function(err, response, body) {
 		if (err) return callback(err);
-		var activities = JSON.parse(body);
+		var activities;
+		try {
+			activities = JSON.parse(body);
+		} catch (e) {
+			return callback(e);
+		}
 		_log('Got ' + activities.length + ' activities');
 		var shouldCrawlNextPage = false;
 

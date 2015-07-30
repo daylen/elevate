@@ -6,6 +6,7 @@ var shared = require('../shared');
 var async = require('async');
 var _ = require('underscore');
 var moment = require('moment');
+var logger = require('../../logger');
 
 // Public
 
@@ -33,6 +34,7 @@ module.exports.doTokenExchange = function(authCode, callback) {
 };
 
 module.exports.backfill = function(callback) {
+	_log('Starting backfill');
 	Token.findOne({service: 'fitbit'}, function(err, token) {
 		if (err) return callback(err);
 		if (!token) return callback();
@@ -59,7 +61,11 @@ module.exports.crawl = function(callback) {
 var _shouldRefreshToken = "SHOULD_REFRESH_TOKEN";
 
 function _log(str) {
-	console.log('[Fitbit] ' + str);
+	logger.info('[Fitbit] ' + str);
+}
+
+function _logError(str) {
+	logger.error('[Fitbit] ' + str);
 }
 
 function _getClientAuthHeader() {
@@ -88,7 +94,12 @@ function _fitbitApiCall(url, accessToken, callback) {
 		function(err, response, body) {
 			if (err)
 				return callback(err);
-			var json = JSON.parse(body);
+			var json;
+			try {
+				json = JSON.parse(body);
+			} catch (e) {
+				return callback(e);
+			}
 			if (response.statusCode == 200)
 				return callback(null, json);
 			else if (response.statusCode == 401)
@@ -157,7 +168,11 @@ function _formatSummary(dateStr, summaryObj, heartArr) {
 	_renameKey(summaryObj, 'caloriesOut', 'calories');
 	var distance = _.filter(summaryObj.distances,
 		function(x) { return x.activity == "total"; });
-	summaryObj.distance = distance[0].distance;
+	if (distance.length > 0) {
+		summaryObj.distance = distance[0].distance;
+	} else {
+		_logError('No distance data');
+	}
 	delete summaryObj.distances;
 	_renameKey(summaryObj, 'sedentaryMinutes', 'minutesSedentary');
 	_renameKey(summaryObj, 'lightlyActiveMinutes', 'minutesLightlyActive');
@@ -169,7 +184,11 @@ function _formatSummary(dateStr, summaryObj, heartArr) {
 		function(x) {
 			return x.dateTime.getTime() == summaryObj.dateTime.getTime();
 		});
-	summaryObj.heart = heart[0].heart;
+	if (heart.length > 0) {
+		summaryObj.heart = heart[0].heart;
+	} else {
+		_logError('No heart data');
+	}
 }
 
 /*

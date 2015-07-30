@@ -10,13 +10,14 @@ var basic = auth.basic({
 });
 var Token = require('../model/token');
 var connectors = require('../connectors');
+var logger = require('../logger');
 
 function _makeHtmlLink(label, url) {
 	return '<a href="' + url + '">' + label + '</a>';
 }
 
 function _logIfError(err) {
-	if (err) console.log(err);
+	if (err) logger.error(err);
 }
 
 router.get('/', auth.connect(basic), function(req, res, next) {

@@ -2,15 +2,22 @@
 
 var Token = require('../model/token');
 var request = require('request');
+var logger = require('../logger');
 
 module.exports.doTokenExchange =
 	function(url, params, headers, service, callback) {
 	request.post({url: url, form: params, headers: headers},
 		function(err, response, body) {
 		if (err) return callback(err);
-		var json = JSON.parse(body);
+		var json;
+		try {
+			json = JSON.parse(body);
+		} catch (e) {
+			return callback(e);
+		}
 		if (!json.access_token) {
-			console.log(json);
+			logger.error('Access token is null');
+			logger.error(json);
 			return callback(new Error('Access token is null'));
 		}
 		Token.findOneAndUpdate(
