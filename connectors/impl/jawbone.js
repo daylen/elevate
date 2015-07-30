@@ -38,7 +38,7 @@ module.exports.crawl = function(callback) {
 		if (err) return callback(err);
 		if (!token) return callback();
 		_fetchFromEndpoint('/nudge/api/v.1.1/users/@me/trends', {
-			num_buckets: 20
+			num_buckets: 30
 		}, token.accessToken, function(err) {
 			_log('Finished crawl');
 			callback(err);
@@ -59,7 +59,6 @@ function _logError(str) {
 }
 
 function _fetchFromEndpoint(endpoint, params, accessToken, callback) {
-	_log('url=' + _base + endpoint);
 	request.get({url: _base + endpoint,
 		qs: params,
 		headers: {'Authorization': 'Bearer ' + accessToken}},
@@ -96,7 +95,7 @@ function _dateIntegerToDateObj(number) {
 	var day = number % 100;
 	var month = Math.floor(number / 100) % 100;
 	var year = Math.floor(number / 10000);
-	return new Date(year, month, day);
+	return new Date(Date.UTC(year, month - 1, day));
 }
 
 /*
@@ -118,7 +117,6 @@ function _processDataArray(earliest, arr, callback) {
 		}
 		var data = dayArr[1];
 		if (!data.m_steps || data.m_steps === 0) {
-			_log('Skipping this day because there are no steps');
 			continue;
 		}
 		var summaryObj = {
