@@ -8,10 +8,10 @@ var fitbitSchema = mongoose.Schema({
 	activityCalories: Number,
 	// stepping
 	steps: Number,
-	distance: Number,
+	distance: Number, // in kilometers
 	// climbing
 	floors: Number,
-	elevation: Number,
+	elevation: Number, // in meters
 	// heart
 	heart: mongoose.Schema.Types.Mixed,
 	// minutes
@@ -20,5 +20,21 @@ var fitbitSchema = mongoose.Schema({
 	minutesFairlyActive: Number,
 	minutesVeryActive: Number
 });
+
+fitbitSchema.options.toObject = {};
+fitbitSchema.options.toObject.transform = function(doc, ret, options) {
+	return {
+		dateTime: doc.dateTime,
+		calories: doc.calories,
+		caloriesBMR: doc.caloriesBMR,
+		activityCalories: doc.activityCalories,
+		steps: doc.steps,
+		distance: doc.distance, // in kilometers
+		floors: doc.floors,
+		elevation: doc.elevation, // in meters
+		heart: doc.heart,
+		activeTime: doc.minutesFairlyActive + doc.minutesVeryActive // in minutes
+	};
+};
 
 module.exports = mongoose.model('Fitbit', fitbitSchema);
