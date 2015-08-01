@@ -1,3 +1,8 @@
 var mongoose = require('mongoose');
 
-module.exports = mongoose.model('Strava', new mongoose.Schema({}, {strict: false}));
+var stravaSchema = mongoose.Schema({
+	start_date: Date,
+	start_date_local: Date
+}, {strict: false});
+
+module.exports = mongoose.model('Strava', stravaSchema);

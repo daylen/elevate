@@ -66,6 +66,10 @@ function _crawlStravaActivities(accessToken, pageNum, callback) {
 		var shouldCrawlNextPage = false;
 
 		async.each(activities, function(activity, callback) {
+			// Convert date string to date object
+			activity.start_date = new Date(activity.start_date);
+			activity.start_date_local = new Date(activity.start_date_local);
+
 			Strava.findOneAndUpdate({id: activity.id}, activity,
 				{'new': false, upsert: true}, function(err, doc) {
 					if (err) return callback(err);
