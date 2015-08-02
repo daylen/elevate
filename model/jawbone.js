@@ -23,7 +23,7 @@ jawboneSchema.options.toObject.transform = function(doc, ret, options) {
 		steps: doc.steps,
 		distance: doc.distance / 1000.0, // in kilometers
 		activeTime: doc.activeTime / 60.0 // in minutes
-	}
+	};
 };
 
 module.exports = mongoose.model('Jawbone', jawboneSchema);
