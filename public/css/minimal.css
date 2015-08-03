@@ -1,0 +1,24 @@
+body {
+	padding: 30px;
+	font: 16px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+	line-height: 24px;
+}
+
+a {
+	color: #4A79FF;
+}
+a:active {
+	color: #2247B2;
+}
+a.subdued {
+	color: #aaa;
+}
+
+.angry {
+	color: #FF4A1E;
+}
+
+.happy {
+	color: #79B22B;
+	font-weight: bold;
+}

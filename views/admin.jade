@@ -1,13 +1,13 @@
 extends layout
 
 block content
+	a(href="/") Back to Elevate
 	h1 Settings
-	h2 Connected services
-	p Connect services to display them in Elevate.
+	p Connect some services to display your fitness data in Elevate.
 	ul
 		li Fitbit: !{fitbit}
 		li Jawbone: !{jawbone}
 		li Strava: !{strava}
-	h2 [Debug] Force crawl
-	form(action="/admin/crawl" method="post")
-		input(type="submit" value="Crawl Now")
+	if (debug)
+		form(action="/admin/crawl" method="post")
+			input(type="submit" value="[Debug] Crawl Now")

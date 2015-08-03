@@ -27,12 +27,13 @@ router.get('/', auth.connect(basic), function(req, res, next) {
 		'jawbone': _makeHtmlLink('Connect Jawbone',
 			connectors.jawbone.getAuthUrl('/admin/jawbone')),
 		'strava': _makeHtmlLink('Connect Strava',
-			connectors.strava.getAuthUrl('/admin/strava'))
+			connectors.strava.getAuthUrl('/admin/strava')),
+		'debug': process.env.NODE_ENV == 'dev'
 	};
 	Token.find({}, function(err, tokens) {
 		if (err) return next(err);
 		for (var token of tokens) {
-			services[token.service] = 'Connected <a href="/admin/disconnect?service=' +
+			services[token.service] = '<span class="happy">Connected</span> <a class="subdued" href="/admin/disconnect?service=' +
 				token.service + '">Disconnect</a>';
 		}
 		res.render('admin', services);

@@ -14,7 +14,9 @@ var admin = require('./routes/admin');
 
 var app = express();
 
-if (!(app.get('env') === 'development')) {
+if (process.env.NODE_ENV == 'dev') {
+  console.log('DEV MODE ENABLED');
+} else {
   require('./connectors').enableBackgroundCrawl();
 }
 
@@ -44,7 +46,7 @@ app.use(function(req, res, next) {
 
 // development error handler
 // will print stacktrace
-if (app.get('env') === 'development') {
+if (process.env.NODE_ENV == 'dev') {
   app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error', {
