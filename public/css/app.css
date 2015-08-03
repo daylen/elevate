@@ -1,0 +1,16 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	padding: 20px;
+	font: 16px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.dayCell {
+	border: 1px solid black;
+	padding: 10px;
+	margin: 10px 0;
+	border-radius: 3px;
+}

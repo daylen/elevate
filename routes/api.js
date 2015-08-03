@@ -92,7 +92,10 @@ function _genActivitiesForDate(dateStr, callback) {
 		if (err) return callback(err);
 		var activityObjects = _.map(activities, function(a) {
 			var b = a.toObject();
-			b = _.omit(b, 'start_latlng', 'end_latlng', '_id', '__v', 'external_id', 'has_kudoed', 'total_photo_count', 'gear_id', 'photo_count', 'start_longitude', 'start_latitude', 'upload_id', 'resource_state');
+			b = _.omit(b, 'start_latlng', 'end_latlng', '_id', '__v',
+				'external_id', 'has_kudoed', 'total_photo_count', 'gear_id',
+				'photo_count', 'start_longitude', 'start_latitude', 'upload_id',
+				'resource_state');
 			return b;
 		});
 		return callback(null, activityObjects);
@@ -103,25 +106,30 @@ function _genSummaryForDate(dateObj, callback) {
 	async.parallel([
 		function(callback) {
 			Fitbit.findOne({dateTime: dateObj}, function(err, data) {
-				if (err) return next(err);
+				if (err) return callback(err);
 				if (!data) return callback(null, null);
 				callback(null, data.toObject({transform: true}));
 			});
 		},
 		function(callback) {
 			Jawbone.findOne({dateTime: dateObj}, function(err, data) {
-				if (err) return next(err);
+				if (err) return callback(err);
 				if (!data) return callback(null, null);
 				callback(null, data.toObject({transform: true}));
 			});
 		},
 	], function(err, results) {
-		if (err) return next(err);
+		if (err) return callback(err);
 		results = _.filter(results, function(x) { return !!x; });
-		var maxData = _.max(results, function(x) {
-			return x.steps;
-		});
-		callback(null, maxData);
+		if (results.length > 0) {
+			var maxData = _.max(results, function(x) {
+				return x.steps;
+			});
+			callback(null, maxData);
+		} else {
+			callback(null, {});
+		}
+		
 	});
 }
 
