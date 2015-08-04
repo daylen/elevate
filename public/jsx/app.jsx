@@ -54,7 +54,7 @@ var DayCellList = React.createClass({
 			steps={day.summary.steps || 0}
 			calories={day.summary.calories || 0}
 			floors={day.summary.floors || 0}
-			heart={day.summary.heart ? day.summary.heart.restingHeartRate : '--'}
+			heart={day.summary.heart ? (day.summary.heart.restingHeartRate || '--') : '--'}
 			activeTime={day.summary.activeTime || 0}
 			milesBiked={day.activities.length > 0 ? _metersToMiles(metersBiked).toFixed(1) : 0} />
 	},
