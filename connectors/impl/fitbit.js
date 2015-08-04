@@ -5,7 +5,7 @@ var request = require('request');
 var shared = require('../shared');
 var async = require('async');
 var _ = require('underscore');
-var moment = require('moment');
+var moment = require('moment-timezone');
 var logger = require('../../logger');
 
 // Public
@@ -119,10 +119,10 @@ the token too.
 */
 function _fetchLatest(token, callback) {
 	_log('Fetching today and yesterday');
-	var todayStr = moment().format('YYYY-MM-DD');
+	var todayStr = moment().tz(globalConfig.timezone).format('YYYY-MM-DD');
 	var todayUrl = "https://api.fitbit.com/1/user/-/activities/date/" +
 		todayStr + ".json";
-	var yesterdayStr = moment().subtract(1, 'day').format('YYYY-MM-DD');
+	var yesterdayStr = moment().tz(globalConfig.timezone).subtract(1, 'day').format('YYYY-MM-DD');
 	var yesterdayUrl = "https://api.fitbit.com/1/user/-/activities/date/" +
 		yesterdayStr + ".json";
 	var heartUrl = "https://api.fitbit.com/1/user/-/activities/heart/date/today/7d.json";

@@ -7,7 +7,7 @@ var Strava = require('../model/strava');
 var _ = require('underscore');
 var async = require('async');
 var logger = require('../logger');
-var moment = require('moment');
+var moment = require('moment-timezone');
 var querystring = require('querystring');
 
 router.get('/activity', function(req, res, next) {
@@ -18,8 +18,8 @@ router.get('/activity', function(req, res, next) {
 		toStr = req.query.to;
 	} else {
 		// Use default date range
-		fromStr = moment().subtract(2, 'weeks').format('YYYY-MM-DD');
-		toStr = moment().format('YYYY-MM-DD');
+		fromStr = moment().tz(globalConfig.timezone).subtract(2, 'weeks').format('YYYY-MM-DD');
+		toStr = moment().tz(globalConfig.timezone).format('YYYY-MM-DD');
 	}
 	// Generate all date strings
 	var dateStrs = [fromStr];
