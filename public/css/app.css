@@ -3,14 +3,58 @@
 	padding: 0;
 }
 
-body {
-	padding: 20px;
-	font: 16px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+html {
+	font: 20px -apple-system, "Helvetica Neue", Helvetica, sans-serif;
 }
 
-.dayCell {
-	border: 1px solid black;
-	padding: 10px;
-	margin: 10px 0;
-	border-radius: 3px;
+body {
+	padding: 3.5rem 0;
+}
+
+@media screen and (max-width: 600px) {
+	html {
+		font: 16px -apple-system, "Helvetica Neue", Helvetica, sans-serif;
+	}
+}
+
+.toolbar {
+	background-color: rebeccapurple;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 2.75rem;
+	box-shadow: 0 2px 4px #777;
+}
+
+h1 {
+	font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, sans-serif;
+	font-weight: 500;
+	font-size: 1.25rem;
+	color: white;
+	margin-top: .75rem;
+	line-height: 1.25rem;
+}
+
+.content {
+	margin: 0 auto;
+	max-width: 800px;
+	padding: 0 10px;
+}
+
+.day {
+	border-top: 1px solid #ccc;
+	padding: 15px 0;
+	overflow: hidden;
+}
+
+.nugget {
+	float: left;
+	width: 14.2%;
+	text-align: center;
+}
+
+.label {
+	font-size: .7rem;
+	color: #777;
 }
