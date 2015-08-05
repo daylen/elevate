@@ -1,10 +1,19 @@
+// Load css
 require('../less/app.less');
+
+// Load libraries
 require('jquery');
 var _ = require('underscore');
 require('backbone');
 var React = require('react');
 require('backbone-react-component');
 var moment = require('moment');
+
+// Constants
+var stepsGoal = 10000;
+var caloriesGoal = 2400;
+var floorsGoal = 15;
+var activeTimeGoal = 30;
 
 // Backbone models
 var Day = Backbone.Model.extend({
@@ -59,12 +68,24 @@ var DayCellList = React.createClass({
 		}, 0);
 		return <DayCell date={dateStr}
 			weekday={weekdayStr}
-			steps={'steps' in day.summary ? day.summary.steps : '--'}
-			calories={'calories' in day.summary ? day.summary.calories.toFixed(0) : '--'}
-			floors={'floors' in day.summary ? day.summary.floors : '--'}
-			heart={day.summary.heart ? (day.summary.heart.restingHeartRate || '--') : '--'}
-			activeTime={'activeTime' in day.summary ? day.summary.activeTime.toFixed(0) : '--'}
-			milesBiked={day.activities.length > 0 ? _metersToMiles(metersBiked).toFixed(1) : 0} />
+			steps={'steps' in day.summary
+				? day.summary.steps
+				: '--'}
+			calories={'calories' in day.summary
+				? day.summary.calories.toFixed(0)
+				: '--'}
+			floors={'floors' in day.summary
+				? day.summary.floors
+				: '--'}
+			heart={day.summary.heart
+				? (day.summary.heart.restingHeartRate || '--')
+				: '--'}
+			activeTime={'activeTime' in day.summary
+				? day.summary.activeTime.toFixed(0)
+				: '--'}
+			milesBiked={day.activities.length > 0
+				? _metersToMiles(metersBiked).toFixed(1)
+				: 0} />
 	},
 	render: function() {
 		return (
@@ -75,9 +96,41 @@ var DayCellList = React.createClass({
 	},
 });
 
+function _getStyleForMeasurement(measurement, goal) {
+	if (measurement == '--') {
+		return 'noValue';
+	} else if (measurement < goal / 2) {
+		return 'lowValue';
+	} else if (measurement < goal) {
+		return 'mediumValue';
+	} else {
+		return 'highValue';
+	}
+}
+
+function _getStyleForHeartRate(heartRate) {
+	if (heartRate == '--') {
+		return 'noValue';
+	} else if (heartRate < 60) {
+		return 'highValue';
+	} else if (heartRate < 80) {
+		return 'mediumValue';
+	} else {
+		return 'lowValue';
+	}
+}
+
 var DayCell = React.createClass({
 	render: function() {
-		var stepsColor = this.props.steps > 10000 ? 'green' : this.props.steps > 5000 ? 'yellow' : 'red';
+		var stepsStyle = _getStyleForMeasurement(this.props.steps, stepsGoal);
+		var caloriesStyle = _getStyleForMeasurement(this.props.calories, caloriesGoal);
+		var floorsStyle = _getStyleForMeasurement(this.props.floors, floorsGoal);
+		var heartStyle = _getStyleForHeartRate(this.props.heart);
+		var activeTimeStyle = _getStyleForMeasurement(this.props.activeTime, activeTimeGoal);
+		var milesBikedStyle = this.props.milesBiked == 0
+			? 'noValue'
+			: '';
+
 		return (
 			<div className="day">
 				<div className="nugget">
@@ -85,27 +138,27 @@ var DayCell = React.createClass({
 					<div className="label">{this.props.weekday}</div>
 				</div>
 				<div className="nugget">
-					<div className={stepsColor}>{this.props.steps}</div>
+					<div className={stepsStyle}>{this.props.steps}</div>
 					<div className="label">steps</div>
 				</div>
-				<div className="nugget">
-					<div className="">{this.props.calories}</div>
+				<div className="nugget secondary">
+					<div className={caloriesStyle}>{this.props.calories}</div>
 					<div className="label">calories burned</div>
 				</div>
-				<div className="nugget">
-					<div className="">{this.props.floors}</div>
+				<div className="nugget secondary">
+					<div className={floorsStyle}>{this.props.floors}</div>
 					<div className="label">floors</div>
 				</div>
 				<div className="nugget">
-					<div className="">{this.props.heart}</div>
+					<div className={heartStyle}>{this.props.heart}</div>
 					<div className="label">bpm resting</div>
 				</div>
 				<div className="nugget">
-					<div className="">{this.props.activeTime}</div>
+					<div className={activeTimeStyle}>{this.props.activeTime}</div>
 					<div className="label">active minutes</div>
 				</div>
 				<div className="nugget">
-					<div className="">{this.props.milesBiked}</div>
+					<div className={milesBikedStyle}>{this.props.milesBiked}</div>
 					<div className="label">miles biked</div>
 				</div>
 			</div>
