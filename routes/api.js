@@ -18,7 +18,7 @@ router.get('/activity', function(req, res, next) {
 		toStr = req.query.to;
 	} else {
 		// Use default date range
-		fromStr = moment().tz(globalConfig.timezone).subtract(2, 'weeks').format('YYYY-MM-DD');
+		fromStr = moment().tz(globalConfig.timezone).subtract(1, 'month').format('YYYY-MM-DD');
 		toStr = moment().tz(globalConfig.timezone).format('YYYY-MM-DD');
 	}
 	// Generate all date strings
@@ -29,7 +29,7 @@ router.get('/activity', function(req, res, next) {
 	// Calculate pagination url
 	var url = '/api/v1/activity?';
 	var newToStr = moment(fromStr).subtract(1, 'day').format('YYYY-MM-DD');
-	var newFromStr = moment(newToStr).subtract(2, 'weeks').format('YYYY-MM-DD');
+	var newFromStr = moment(newToStr).subtract(1, 'month').format('YYYY-MM-DD');
 	var paginationParams = {
 		from: newFromStr,
 		to: newToStr

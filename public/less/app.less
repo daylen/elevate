@@ -8,7 +8,7 @@ html {
 }
 
 body {
-	padding: 3.5rem 0;
+	padding-top: 3.5rem;
 }
 
 @media screen and (max-width: 600px) {
@@ -16,6 +16,10 @@ body {
 		font: 16px -apple-system, "Helvetica Neue", Helvetica, sans-serif;
 	}
 }
+
+/*
+ *	Top bar
+ */
 
 .toolbar {
 	background-color: rebeccapurple;
@@ -42,19 +46,73 @@ h1 {
 	padding: 0 10px;
 }
 
+/*
+ *	Day
+ */
+
+.day:first-of-type {
+	border: none;
+}
+
 .day {
 	border-top: 1px solid #ccc;
 	padding: 15px 0;
 	overflow: hidden;
+	cursor: pointer;
 }
+.day:hover {
+	background-color: #eee;
+}
+.day:active {
+	background-color: #ddd;
+}
+
+/*
+ *	Nuggets
+ */
 
 .nugget {
 	float: left;
 	width: 14.2%;
 	text-align: center;
 }
-
 .label {
 	font-size: .7rem;
 	color: #777;
+}
+.red {
+	color: red;
+}
+.yellow {
+	color: orange;
+}
+.green {
+	color: green;
+}
+
+/*
+ *	Load More
+ */
+
+.loadMoreOuter {
+	text-align: center;
+	margin: 20px 0 40px 0;
+}
+.loadMore {
+	border: 1px solid #ccc;
+	border-radius: 3px;
+	display: inline-block;
+	padding: 10px 20px;
+	color: #777;
+	text-decoration: none;
+	text-align: center;
+	cursor: pointer;
+}
+.loadMore:hover {
+	border: 1px solid rebeccapurple;
+	color: rebeccapurple;
+}
+.loadMore:active {
+	background-color: rebeccapurple;
+	color: white;
 }

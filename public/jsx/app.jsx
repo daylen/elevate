@@ -1,3 +1,11 @@
+require('../less/app.less');
+require('jquery');
+var _ = require('underscore');
+require('backbone');
+var React = require('react');
+require('backbone-react-component');
+var moment = require('moment');
+
 // Backbone models
 var Day = Backbone.Model.extend({
 	idAttribute: 'date',
@@ -51,16 +59,16 @@ var DayCellList = React.createClass({
 		}, 0);
 		return <DayCell date={dateStr}
 			weekday={weekdayStr}
-			steps={day.summary.steps || 0}
-			calories={day.summary.calories || 0}
-			floors={day.summary.floors || 0}
+			steps={'steps' in day.summary ? day.summary.steps : '--'}
+			calories={'calories' in day.summary ? day.summary.calories.toFixed(0) : '--'}
+			floors={'floors' in day.summary ? day.summary.floors : '--'}
 			heart={day.summary.heart ? (day.summary.heart.restingHeartRate || '--') : '--'}
-			activeTime={day.summary.activeTime || 0}
+			activeTime={'activeTime' in day.summary ? day.summary.activeTime.toFixed(0) : '--'}
 			milesBiked={day.activities.length > 0 ? _metersToMiles(metersBiked).toFixed(1) : 0} />
 	},
 	render: function() {
 		return (
-			<div className="content">
+			<div>
 				{this.state.collection.map(this.createDay)}
 			</div>
 		)
@@ -69,34 +77,35 @@ var DayCellList = React.createClass({
 
 var DayCell = React.createClass({
 	render: function() {
+		var stepsColor = this.props.steps > 10000 ? 'green' : this.props.steps > 5000 ? 'yellow' : 'red';
 		return (
 			<div className="day">
 				<div className="nugget">
-					<div className="measurement">{this.props.date}</div>
+					<div className="">{this.props.date}</div>
 					<div className="label">{this.props.weekday}</div>
 				</div>
 				<div className="nugget">
-					<div className="measurement">{this.props.steps}</div>
+					<div className={stepsColor}>{this.props.steps}</div>
 					<div className="label">steps</div>
 				</div>
 				<div className="nugget">
-					<div className="measurement">{this.props.calories}</div>
+					<div className="">{this.props.calories}</div>
 					<div className="label">calories burned</div>
 				</div>
 				<div className="nugget">
-					<div className="measurement">{this.props.floors}</div>
+					<div className="">{this.props.floors}</div>
 					<div className="label">floors</div>
 				</div>
 				<div className="nugget">
-					<div className="measurement">{this.props.heart}</div>
+					<div className="">{this.props.heart}</div>
 					<div className="label">bpm resting</div>
 				</div>
 				<div className="nugget">
-					<div className="measurement">{this.props.activeTime}</div>
+					<div className="">{this.props.activeTime}</div>
 					<div className="label">active minutes</div>
 				</div>
 				<div className="nugget">
-					<div className="measurement">{this.props.milesBiked}</div>
+					<div className="">{this.props.milesBiked}</div>
 					<div className="label">miles biked</div>
 				</div>
 			</div>
@@ -104,9 +113,27 @@ var DayCell = React.createClass({
 	},
 });
 
+var LoadMore = React.createClass({
+	handleClick: function() {
+		dayCollection.fetch({remove: false, url: dayCollection.next_url });
+	},
+	render: function() {
+		return (
+			<div className="loadMoreOuter">
+				<span onClick={this.handleClick} className="loadMore">
+					Load More...
+				</span>
+			</div>
+		);
+	}
+})
+
 React.render((
 	<div>
 		<Toolbar />
-		<DayCellList collection={dayCollection} />
+		<div className="content">
+			<DayCellList collection={dayCollection} />
+			<LoadMore />
+		</div>
 	</div>
 ), document.getElementById('elevate'));

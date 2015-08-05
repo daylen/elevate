@@ -33,4 +33,4 @@ node_modules
 config/custom.yml
 
 # Compiled JS
-public/js/
+public/dist/
