@@ -1,72 +1,159 @@
-// Load css
 require('../less/app.less');
 
-// Load libraries
-require('jquery');
-var _ = require('underscore');
-require('backbone');
-var React = require('react');
-require('backbone-react-component');
-var moment = require('moment');
+import Fluxxor from 'fluxxor';
+import React from 'react';
+import moment from 'moment';
+import $ from 'jquery';
 
-// Constants
-var stepsGoal = 10000;
-var caloriesGoal = 2400;
-var floorsGoal = 15;
-var activeTimeGoal = 30;
+var Router = require('react-router');
+var Route = Router.Route;
+var DefaultRoute = Router.DefaultRoute;
+var Link = Router.Link;
 
-// Backbone models
-var Day = Backbone.Model.extend({
-	idAttribute: 'date',
-});
+let stepsGoal = 10000;
+let caloriesGoal = 2400;
+let floorsGoal = 15;
+let activeTimeGoal = 30;
 
-var DayCollection = Backbone.Collection.extend({
-	model: Day,
-	url: '/api/v1/activity',
-	parse: function(data) {
+var constants = {
+	LOAD_MORE_DAYS: "LOAD_MORE_DAYS",
+	LOAD_MORE_DAYS_SUCCESS: "LOAD_MORE_DAYS_SUCCESS",
+	LOAD_MORE_DAYS_FAIL: "LOAD_MORE_DAYS_FAIL",
+
+	LOAD_SINGLE_DAY: "LOAD_SINGLE_DAY",
+	LOAD_SINGLE_DAY_SUCCESS: "LOAD_SINGLE_DAY_SUCCESS",
+	LOAD_SINGLE_DAY_FAIL: "LOAD_SINGLE_DAY_FAIL"
+};
+
+var actions = {
+	loadMoreDays: function(url) {
+		this.dispatch(constants.LOAD_MORE_DAYS);
+
+		$.ajax({
+			url: url,
+			success: (data) => {
+				this.dispatch(constants.LOAD_MORE_DAYS_SUCCESS, data);
+			},
+			error: () => {
+				this.dispatch(constants.LOAD_MORE_DAYS_FAIL);
+			},
+		});
+	},
+
+	loadSingleDay: function(id) {
+		this.dispatch(constants.LOAD_SINGLE_DAY);
+
+		$.ajax({
+			url: '/api/v1/activity/' + id,
+			success: (data) => {
+				this.dispatch(constants.LOAD_SINGLE_DAY_SUCCESS, data);
+			},
+			error: () => {
+				this.dispatch(constants.LOAD_SINGLE_DAY_FAIL);
+			},
+		});
+	},
+};
+
+var DayStore = Fluxxor.createStore({
+	initialize: function() {
+		this.loading = false;
+		this.dayMap = new Map();
+		this.next_url = "/api/v1/activity";
+
+		this.bindActions(
+			constants.LOAD_MORE_DAYS, this.onLoadMoreDays,
+			constants.LOAD_MORE_DAYS_SUCCESS, this.onLoadMoreDaysSuccess,
+			constants.LOAD_MORE_DAYS_FAIL, this.onLoadMoreDaysFail,
+			constants.LOAD_SINGLE_DAY, this.onLoadSingleDay,
+			constants.LOAD_SINGLE_DAY_SUCCESS, this.onLoadSingleDaySuccess,
+			constants.LOAD_SINGLE_DAY_FAIL, this.onLoadSingleDayFail
+		);
+	},
+	getDay: function(dateStr) {
+		return this.dayMap.get(dateStr);
+	},
+	getDays: function() {
+		return [...this.dayMap.values()].sort((m1, m2) =>
+			moment(m1.date).isBefore(m2.date) ? 1 : -1);
+	},
+	onLoadMoreDays: function() {
+		this.loading = true;
+		this.emit('change');
+	},
+	onLoadMoreDaysSuccess: function(data) {
+		this.loading = false;
+		for (var day of data.activities) {
+			this.dayMap.set(day.date, day);
+		}
 		this.next_url = data.next;
-		return data.activities;
+		this.emit('change');
 	},
-	next_url: '',
-	comparator: function(m1, m2) {
-		return moment(m1.id).isBefore(m2.id) ? 1 : -1;
+	onLoadMoreDaysFail: function() {
+		this.loading = false;
+		console.log('Error loading more days');
+		this.emit('change');
+	},
+	onLoadSingleDay: function() {
+		this.loading = true;
+		this.emit('change');
+	},
+	onLoadSingleDaySuccess: function(data) {
+		this.loading = false;
+		this.dayMap.set(data.date, data);
+		this.emit('change');
+	},
+	onLoadSingleDayFail: function() {
+		this.loading = false;
+		console.log('Error loading single day');
+		this.emit('change');
 	},
 });
 
-// Model instantiation
-var dayCollection = new DayCollection();
-dayCollection.fetch().then(function() {
-	console.log('fetched data');
-	console.log(dayCollection.length + ' days');
+var stores = {
+	DayStore: new DayStore()
+};
+
+var flux = new Fluxxor.Flux(stores, actions);
+
+flux.on('dispatch', function(type, payload) {
+	console.log('Dispatch', type, payload);
 });
 
-// Utils
+var FluxMixin = Fluxxor.FluxMixin(React),
+	StoreWatchMixin = Fluxxor.StoreWatchMixin;
+
 function _metersToMiles(meters) {
 	return meters / 1609.344;
 }
 
-// React
 var Toolbar = React.createClass({
 	render: function() {
 		return <div className="toolbar">
 			<div className="content">
-				<h1>elevate</h1>
+				<h1><Link to="/">elevate</Link></h1>
 			</div>
 		</div>;
 	},
 });
 
 var DayCellList = React.createClass({
-	mixins: [Backbone.React.Component.mixin],
+	mixins: [FluxMixin, StoreWatchMixin('DayStore')],
+	getStateFromFlux: function() {
+		var store = this.getFlux().store('DayStore');
+		return {
+			days: store.getDays()
+		};
+	},
 	createDay: function(day) {
+		var dateId = moment(day.date).format('YYYY-MM-DD');
 		var dateStr = moment(day.date).format('MMM D');
 		var weekdayStr = moment(day.date).format('ddd');
-		var metersBiked = _.reduce(_.filter(day.activities, function(x) {
-			return x.type === "Ride";
-		}), function(acc, x) {
-			return acc + x.distance;
-		}, 0);
-		return <DayCell date={dateStr}
+		var metersBiked = day.activities.filter(r => r.type === "Ride")
+			.map(r => r.distance)
+			.reduce((a, b) => a + b, 0);
+		return <DayCell id={dateId}
+			date={dateStr}
 			weekday={weekdayStr}
 			steps={'steps' in day.summary
 				? day.summary.steps
@@ -90,10 +177,11 @@ var DayCellList = React.createClass({
 	render: function() {
 		return (
 			<div>
-				{this.state.collection.map(this.createDay)}
+				{this.state.days.map(this.createDay)}
+				<LoadMore />
 			</div>
-		)
-	},
+		);
+	}
 });
 
 function _getStyleForMeasurement(measurement, goal) {
@@ -132,7 +220,7 @@ var DayCell = React.createClass({
 			: '';
 
 		return (
-			<div className="day">
+			<Link to="detail" params={{id: this.props.id}} className="day">
 				<div className="nugget">
 					<div className="">{this.props.date}</div>
 					<div className="label">{this.props.weekday}</div>
@@ -161,14 +249,16 @@ var DayCell = React.createClass({
 					<div className={milesBikedStyle}>{this.props.milesBiked}</div>
 					<div className="label">miles biked</div>
 				</div>
-			</div>
+			</Link>
 		);
 	},
 });
 
 var LoadMore = React.createClass({
+	mixins: [FluxMixin],
 	handleClick: function() {
-		dayCollection.fetch({remove: false, url: dayCollection.next_url });
+		var store = this.getFlux().store('DayStore');
+		this.getFlux().actions.loadMoreDays(store.next_url);
 	},
 	render: function() {
 		return (
@@ -179,14 +269,53 @@ var LoadMore = React.createClass({
 			</div>
 		);
 	}
-})
+});
 
-React.render((
-	<div>
-		<Toolbar />
-		<div className="content">
-			<DayCellList collection={dayCollection} />
-			<LoadMore />
-		</div>
-	</div>
-), document.getElementById('elevate'));
+var DayDetail = React.createClass({
+	mixins: [FluxMixin, StoreWatchMixin('DayStore')],
+	getStateFromFlux: function() {
+		var store = this.getFlux().store('DayStore');
+		var dateStr = this.props.params.id;
+		var obj = store.getDay(dateStr);
+		if (!obj && !store.loading) {
+			this.getFlux().actions.loadSingleDay(dateStr);
+		}
+		return {
+			day: obj
+		};
+	},
+	render: function() {
+		return <h1>{this.state.day ? this.state.day.date : '...'}</h1>;
+	}
+});
+
+var RouteHandler = Router.RouteHandler;
+
+var App = React.createClass({
+	mixins: [FluxMixin],
+	render: function() {
+		return (
+			<div>
+				<Toolbar />
+				<div className="content">
+					<RouteHandler/>
+				</div>
+			</div>
+		);
+	}
+});
+
+var routes = (
+	<Route handler={App} path="/">
+		<DefaultRoute handler={DayCellList}/>
+		<Route name="detail" path="detail/:id" handler={DayDetail}/>
+	</Route>
+);
+
+var appElement = document.getElementById('elevate');
+
+Router.run(routes, function(Handler) {
+	React.render(<Handler flux={flux} />, appElement);
+});
+
+flux.actions.loadMoreDays(stores.DayStore.next_url);
