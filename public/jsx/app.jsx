@@ -3,8 +3,8 @@ require('../less/app.less');
 import Fluxxor from 'fluxxor';
 import React from 'react';
 import moment from 'moment';
-import $ from 'jquery';
 
+require("babel/polyfill");
 var Router = require('react-router');
 var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
@@ -25,33 +25,38 @@ var constants = {
 	LOAD_SINGLE_DAY_FAIL: "LOAD_SINGLE_DAY_FAIL"
 };
 
+function _httpGet(url, success, failure) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', encodeURI(url));
+	xhr.onload = function() {
+		if (xhr.status === 200) {
+			success(JSON.parse(xhr.responseText));
+		} else {
+			failure();
+		}
+	};
+	xhr.send();
+}
+
 var actions = {
 	loadMoreDays: function(url) {
 		this.dispatch(constants.LOAD_MORE_DAYS);
 
-		$.ajax({
-			url: url,
-			success: (data) => {
+		_httpGet(url, (data) => {
 				this.dispatch(constants.LOAD_MORE_DAYS_SUCCESS, data);
-			},
-			error: () => {
+			}, () => {
 				this.dispatch(constants.LOAD_MORE_DAYS_FAIL);
-			},
-		});
+			});
 	},
 
 	loadSingleDay: function(id) {
 		this.dispatch(constants.LOAD_SINGLE_DAY);
 
-		$.ajax({
-			url: '/api/v1/activity/' + id,
-			success: (data) => {
+		_httpGet('/api/v1/activity/' + id, (data) => {
 				this.dispatch(constants.LOAD_SINGLE_DAY_SUCCESS, data);
-			},
-			error: () => {
+			}, () => {
 				this.dispatch(constants.LOAD_SINGLE_DAY_FAIL);
-			},
-		});
+			});
 	},
 };
 
@@ -74,7 +79,7 @@ var DayStore = Fluxxor.createStore({
 		return this.dayMap.get(dateStr);
 	},
 	getDays: function() {
-		return [...this.dayMap.values()].sort((m1, m2) =>
+		return Array.from(this.dayMap.values()).sort((m1, m2) =>
 			moment(m1.date).isBefore(m2.date) ? 1 : -1);
 	},
 	onLoadMoreDays: function() {
