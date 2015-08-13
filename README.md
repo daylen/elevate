@@ -31,9 +31,10 @@ Assuming you have a server with Node and Mongo installed, here's what you have t
 	- [Here is a map](http://momentjs.com/timezone/) of valid timezone strings.
 	- Pick a strong password; this is how you'll log in to the settings area.
 	- Replace all the relevant OAuth fields.
-7. In a new `screen` (or your favorite method for persistent processes), run `npm start`. This will attach to port 80.
-8. Visit `YOUR_DOMAIN_NAME/admin`, log in with the username and password you chose in `custom.yml`, and connect some accounts.
-9. Visit `YOUR_DOMAIN_NAME`. You should see your health data! If not, please let me know and I'll do my best to help.
+7. Install naught: `npm install -g naught`
+8. `npm start`
+9. Visit `YOUR_DOMAIN_NAME/admin`, log in with the username and password you chose in `custom.yml`, and connect some accounts.
+10. Visit `YOUR_DOMAIN_NAME`. You should see your health data! If not, please let me know and I'll do my best to help.
 
 **Note**: It is strongly recommended that you serve your site over HTTPS because the settings area uses HTTP Basic Auth. Remember that [CloudFlare](https://www.cloudflare.com) offers free SSL.
 
@@ -51,6 +52,8 @@ The code that crawls the various services can be found in `connectors/`. The API
 - GET `/api/v1/activity` - fetches the last month of activity
 - GET `/api/v1/activity?from=2015-01-01&to=2015-02-01` - fetches a range of activity
 - GET `/api/v1/activity/2015-01-01` - fetches activity for a specific day
+
+Specify `NODE_ENV=dev` to disable background crawling.
 
 ### Front end
 

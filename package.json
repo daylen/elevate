@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node --harmony ./bin/www"
+    "start": "naught start --node-args '--harmony' ./bin/www"
   },
   "dependencies": {
     "async": "^1.4.0",

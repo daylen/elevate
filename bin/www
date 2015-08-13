@@ -67,4 +67,12 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   console.log('Listening on ' + bind);
+  if (process.send)
+    process.send('online');
 }
+
+process.on('message', function(message) {
+  if (message === 'shutdown') {
+    process.exit(0);
+  }
+});
