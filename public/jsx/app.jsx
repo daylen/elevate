@@ -443,7 +443,7 @@ var Footer = React.createClass({
 		return (
 			<footer>
 				<div className="content">
-					<p>Powered by Elevate.</p>
+					<p><a href="https://github.com/daylen/elevate" target="_blank">Powered by Elevate</a>.</p>
 				</div>
 			</footer>
 		);

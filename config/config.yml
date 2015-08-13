@@ -1,0 +1,18 @@
+---
+default:
+    name: YOUR NAME HERE
+    timezone: America/Los_Angeles
+    mongodb_url: mongodb://localhost/elevate
+    oauth_redirect_base: http://YOUR_DOMAIN_NAME # No trailing slash
+    admin:
+        username: admin
+        password: PICK_A_PASSWORD
+    fitbit: # OAuth 2.0
+        client_id: REPLACE_THIS
+        client_secret: REPLACE_THIS
+    jawbone: # OAuth 2.0
+        client_id: REPLACE_THIS
+        client_secret: REPLACE_THIS
+    strava: # OAuth 2.0
+        client_id: REPLACE_THIS
+        client_secret: REPLACE_THIS
