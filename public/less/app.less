@@ -11,6 +11,7 @@
 * {
 	margin: 0;
 	padding: 0;
+	box-sizing: border-box;
 }
 
 html {
@@ -37,20 +38,19 @@ body {
 	top: 0;
 	left: 0;
 	width: 100%;
-	height: 2.75rem;
 	box-shadow: 0 2px 4px @darkGray;
-}
 
-.toolbar h1 a {
-	font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, sans-serif;
-	font-weight: 500;
-	font-size: 1.25rem;
-	color: white;
-	margin-top: .75rem;
-	line-height: 1.25rem;
-	text-align: center;
-	display: block;
-	text-decoration: none;
+	h1 a {
+		display: block;
+		color: rgba(255, 255, 255, 0.9);
+		text-decoration: none;
+		font-size: 1rem;
+		line-height: 1rem;
+		text-transform: uppercase;
+		letter-spacing: 3px;
+		font-weight: 500;
+		padding: 1rem 0;
+	}
 }
 
 .content {
@@ -86,12 +86,12 @@ a.day:active {
  *	Nuggets
  */
 
-.nugget {
+.day .nugget {
 	float: left;
 	width: 14.285714286%;
 	text-align: center;
 }
-.label {
+.day .nugget .label {
 	font-size: .7rem;
 	color: @darkGray;
 }
@@ -112,9 +112,127 @@ a.day:active {
 	.secondary {
 		display: none;
 	}
-	.nugget {
+	.day .nugget {
 		width: 20%;
 	}
+}
+
+/*
+ *	Day Detail
+ */
+.detail {
+	overflow: hidden;
+	padding-bottom: 20px;
+	h1 {
+		font-size: 1.5rem;
+		font-weight: normal;
+		color: #333;
+		text-align: center;
+		padding: 15px 0;
+		border-bottom: 1px solid @lightGray;
+		margin-bottom: 15px;
+	}
+	h2 {
+		color: #555;
+		font-size: 0.9rem;
+		text-transform: uppercase;
+		letter-spacing: 4px;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+	.column {
+		width: 50%;
+		float: left;
+		padding-right: 10px;
+	}
+	.column:last-of-type {
+		padding-left: 10px;
+	}
+	.nugget {
+		font-size: 1.5rem;
+		font-weight: 600;
+		.label {
+			font-size: 1rem;
+			font-weight: normal;
+			color: @darkGray;
+		}
+		padding: 10px 0;
+		border-bottom: 1px dotted @lightGray;
+	}
+	.nugget:last-of-type {
+		border: none;
+	}
+	.activity {
+		display: block;
+		border: 1px solid @lightGray;
+		border-radius: 3px;
+		padding: 10px;
+		margin-bottom: 20px;
+
+		h3 {
+			font-weight: normal;
+			font-size: 1rem;
+			padding-bottom: 7px;
+			margin-bottom: 7px;
+			border-bottom: 1px solid @lightGray;
+		}
+		.activityNuggetContainer {
+			overflow: hidden;
+		}
+		.activityNugget {
+			width: 50%;
+			float: left;
+			margin-bottom: 10px;
+			font-size: 1.5rem;
+			small {
+				font-size: 0.9rem;
+				margin-left: 1px;
+			}
+			.label {
+				color: @darkGray;
+				font-size: 0.7rem;
+			}
+		}
+		a.button {
+			color: white;
+			background-color: #fc4c02;
+			text-decoration: none;
+			padding: 10px 0;
+			width: 100%;
+			display: block;
+			text-align: center;
+			border-radius: 3px;
+			opacity: 0.8;
+		}
+		a.button:hover {
+			opacity: 1;
+		}
+		a.button.disabled {
+			color: @darkGray;
+			pointer-events: none;
+			cursor: default;
+			background-color: @lightGray;
+		}
+	}
+}
+
+@media screen and (max-width: @breakpoint) {
+	.detail .column, .detail .column:last-of-type {
+		width: 100%;
+		float: none;
+		padding: 0;
+	}
+}
+
+.placeholder {
+	background-color: #f1f1f1;
+	text-align: center;
+	padding: 40px 0;
+	margin: 10px 0;
+	font-size: 1.5rem;
+	color: #aaa;
+	border-radius: 3px;
+	text-shadow: 0 1px 0 white;
 }
 
 /*
@@ -142,4 +260,18 @@ a.day:active {
 .loadMore:active {
 	background-color: @themeColor;
 	color: white;
+}
+
+/*
+ *	Footer
+ */
+
+footer {
+	border-top: 1px solid @lightGray;
+	padding: 15px 0 25px 0;
+
+	p {
+		color: @darkGray;
+		font-size: 0.7rem;
+	}
 }

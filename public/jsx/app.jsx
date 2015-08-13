@@ -11,11 +11,16 @@ var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 
 let stepsGoal = 10000;
+let distanceGoal = 5;
 let caloriesGoal = 2400;
 let floorsGoal = 15;
 let activeTimeGoal = 30;
 
 var constants = {
+	LOAD_NAME: "LOAD_NAME",
+	LOAD_NAME_SUCCESS: "LOAD_NAME_SUCCESS",
+	LOAD_NAME_FAIL: "LOAD_NAME_FAIL",
+
 	LOAD_MORE_DAYS: "LOAD_MORE_DAYS",
 	LOAD_MORE_DAYS_SUCCESS: "LOAD_MORE_DAYS_SUCCESS",
 	LOAD_MORE_DAYS_FAIL: "LOAD_MORE_DAYS_FAIL",
@@ -39,34 +44,46 @@ function _httpGet(url, success, failure) {
 }
 
 var actions = {
+	loadName: function() {
+		this.dispatch(constants.LOAD_NAME);
+
+		_httpGet('api/v1/name', (data) => {
+			this.dispatch(constants.LOAD_NAME_SUCCESS, data);
+		}, () => {
+			this.dispatch(constants.LOAD_NAME_FAIL);
+		});
+	},
+
 	loadMoreDays: function(url) {
 		this.dispatch(constants.LOAD_MORE_DAYS);
 
 		_httpGet(url, (data) => {
-				this.dispatch(constants.LOAD_MORE_DAYS_SUCCESS, data);
-			}, () => {
-				this.dispatch(constants.LOAD_MORE_DAYS_FAIL);
-			});
+			this.dispatch(constants.LOAD_MORE_DAYS_SUCCESS, data);
+		}, () => {
+			this.dispatch(constants.LOAD_MORE_DAYS_FAIL);
+		});
 	},
 
 	loadSingleDay: function(id) {
 		this.dispatch(constants.LOAD_SINGLE_DAY);
 
 		_httpGet('/api/v1/activity/' + id, (data) => {
-				this.dispatch(constants.LOAD_SINGLE_DAY_SUCCESS, data);
-			}, () => {
-				this.dispatch(constants.LOAD_SINGLE_DAY_FAIL);
-			});
+			this.dispatch(constants.LOAD_SINGLE_DAY_SUCCESS, data);
+		}, () => {
+			this.dispatch(constants.LOAD_SINGLE_DAY_FAIL);
+		});
 	},
 };
 
 var DayStore = Fluxxor.createStore({
 	initialize: function() {
+		this.name = "";
 		this.loading = false;
 		this.dayMap = new Map();
 		this.next_url = "/api/v1/activity";
 
 		this.bindActions(
+			constants.LOAD_NAME_SUCCESS, this.onLoadNameSuccess,
 			constants.LOAD_MORE_DAYS, this.onLoadMoreDays,
 			constants.LOAD_MORE_DAYS_SUCCESS, this.onLoadMoreDaysSuccess,
 			constants.LOAD_MORE_DAYS_FAIL, this.onLoadMoreDaysFail,
@@ -81,6 +98,9 @@ var DayStore = Fluxxor.createStore({
 	getDays: function() {
 		return Array.from(this.dayMap.values()).sort((m1, m2) =>
 			moment(m1.date).isBefore(m2.date) ? 1 : -1);
+	},
+	onLoadNameSuccess: function(data) {
+		this.name = data.name;
 	},
 	onLoadMoreDays: function() {
 		this.loading = true;
@@ -133,14 +153,49 @@ function _metersToMiles(meters) {
 }
 
 var Toolbar = React.createClass({
+	mixins: [FluxMixin, StoreWatchMixin('DayStore')],
+	getStateFromFlux: function() {
+		var store = this.getFlux().store('DayStore');
+		return {
+			name: store.name
+		};
+	},
 	render: function() {
 		return <div className="toolbar">
 			<div className="content">
-				<h1><Link to="/">elevate</Link></h1>
+				<h1><Link to="/">{this.state.name}</Link></h1>
 			</div>
 		</div>;
 	},
 });
+
+function _getNormalizedSummary(summary) {
+	// Returns a normalized summary, ready for presentation.
+	// Empty fields have '--'
+	if (!summary) return {};
+
+	// We don't use the || hack to distinguish between missing and zero values
+	return {
+		steps: 'steps' in summary
+			? summary.steps
+			: '--',
+		calories: 'calories' in summary
+			? summary.calories.toFixed(0)
+			: '--',
+		floors: 'floors' in summary
+			? summary.floors
+			: '--',
+		heart: summary.heart
+			? (summary.heart.restingHeartRate || '--')
+			: '--',
+		activeTime: 'activeTime' in summary
+			? summary.activeTime.toFixed(0)
+			: '--',
+		distance: 'distance' in summary
+			? _metersToMiles(summary.distance * 1000).toFixed(1)
+			: '--'
+	};
+}
 
 var DayCellList = React.createClass({
 	mixins: [FluxMixin, StoreWatchMixin('DayStore')],
@@ -154,30 +209,25 @@ var DayCellList = React.createClass({
 		var dateId = moment(day.date).format('YYYY-MM-DD');
 		var dateStr = moment(day.date).format('MMM D');
 		var weekdayStr = moment(day.date).format('ddd');
-		var metersBiked = day.activities.filter(r => r.type === "Ride")
-			.map(r => r.distance)
-			.reduce((a, b) => a + b, 0);
+
+		var milesBiked = day.activities.length
+			? _metersToMiles(day.activities
+				.filter(r => r.type === "Ride")
+				.map(r => r.distance)
+				.reduce((a, b) => a + b, 0)).toFixed(1)
+			: 0;
+
+		var norm = _getNormalizedSummary(day.summary);
+
 		return <DayCell id={dateId}
 			date={dateStr}
 			weekday={weekdayStr}
-			steps={'steps' in day.summary
-				? day.summary.steps
-				: '--'}
-			calories={'calories' in day.summary
-				? day.summary.calories.toFixed(0)
-				: '--'}
-			floors={'floors' in day.summary
-				? day.summary.floors
-				: '--'}
-			heart={day.summary.heart
-				? (day.summary.heart.restingHeartRate || '--')
-				: '--'}
-			activeTime={'activeTime' in day.summary
-				? day.summary.activeTime.toFixed(0)
-				: '--'}
-			milesBiked={day.activities.length > 0
-				? _metersToMiles(metersBiked).toFixed(1)
-				: 0} />
+			steps={norm.steps}
+			calories={norm.calories}
+			floors={norm.floors}
+			heart={norm.heart}
+			activeTime={norm.activeTime}
+			milesBiked={milesBiked} />
 	},
 	render: function() {
 		return (
@@ -289,8 +339,113 @@ var DayDetail = React.createClass({
 			day: obj
 		};
 	},
+	createActivityNugget: function(activity) {
+		return (
+			<ActivityNugget activity={activity}/>
+		);
+	},
 	render: function() {
-		return <h1>{this.state.day ? this.state.day.date : '...'}</h1>;
+		if (!this.state.day) {
+			return <div>Loading...</div>;
+		}
+		var norm = _getNormalizedSummary(this.state.day.summary);
+
+		var stepsStyle = _getStyleForMeasurement(norm.steps, stepsGoal);
+		var distanceStyle = _getStyleForMeasurement(norm.distance, distanceGoal);
+		var caloriesStyle = _getStyleForMeasurement(norm.calories, caloriesGoal);
+		var floorsStyle = _getStyleForMeasurement(norm.floors, floorsGoal);
+		var heartStyle = _getStyleForHeartRate(norm.heart);
+		var activeTimeStyle = _getStyleForMeasurement(norm.activeTime, activeTimeGoal);
+		return (
+			<div className="detail">
+				<h1>{moment(this.state.day.date).format('ddd, MMM D, YYYY')}</h1>
+				<div className="column">
+					<h2>Summary</h2>
+					<div className="nugget">
+						<div className={stepsStyle}>{norm.steps}</div>
+						<div className="label">steps</div>
+					</div>
+					<div className="nugget">
+						<div className={distanceStyle}>{norm.distance}</div>
+						<div className="label">miles</div>
+					</div>
+					<div className="nugget">
+						<div className={caloriesStyle}>{norm.calories}</div>
+						<div className="label">calories burned</div>
+					</div>
+					<div className="nugget">
+						<div className={floorsStyle}>{norm.floors}</div>
+						<div className="label">floors</div>
+					</div>
+					<div className="nugget">
+						<div className={heartStyle}>{norm.heart}</div>
+						<div className="label">bpm resting</div>
+					</div>
+					<div className="nugget">
+						<div className={activeTimeStyle}>{norm.activeTime}</div>
+						<div className="label">active minutes</div>
+					</div>
+				</div>
+				<div className="column">
+					<h2>Activities</h2>
+					{this.state.day.activities.length
+						? this.state.day.activities.map(this.createActivityNugget)
+						: <div className="placeholder">No activities</div>}
+				</div>
+			</div>
+		);
+	}
+});
+
+function _metersToFeet(meters) {
+	return meters * 3.28084;
+}
+
+var ActivityNugget = React.createClass({
+	render: function() {
+		var activity = this.props.activity;
+		var movingTime = moment.duration(activity.moving_time, 'seconds');
+
+		return (
+			<div className="activity">
+				<h3>{activity.name}</h3>
+				<div className="activityNuggetContainer">
+					<div className="activityNugget">
+						<div>{_metersToMiles(activity.distance).toFixed(1)}<small>mi</small></div>
+						<div className="label">Distance</div>
+					</div>
+					<div className="activityNugget">
+						<div>{_metersToFeet(activity.total_elevation_gain).toFixed(0)}<small>ft</small></div>
+						<div className="label">Elevation</div>
+					</div>
+					<div className="activityNugget">
+						<div>{movingTime.hours()}<small>h</small> {movingTime.minutes()}<small>m</small></div>
+						<div className="label">Moving Time</div>
+					</div>
+					<div className="activityNugget">
+						<div>{_metersToMiles(activity.average_speed * 3600).toFixed(1)}<small>mi/h</small></div>
+						<div className="label">Average Speed</div>
+					</div>
+				</div>
+
+				{activity.private
+					? <a className="button disabled">Activity is private</a>
+					: <a href={"http://strava.com/activities/" + activity.id}
+						target="_blank" className="button">Map on Strava »</a>}
+			</div>
+		);
+	}
+});
+
+var Footer = React.createClass({
+	render: function() {
+		return (
+			<footer>
+				<div className="content">
+					<p>Powered by Elevate.</p>
+				</div>
+			</footer>
+		);
 	}
 });
 
@@ -305,6 +460,7 @@ var App = React.createClass({
 				<div className="content">
 					<RouteHandler/>
 				</div>
+				<Footer />
 			</div>
 		);
 	}
@@ -323,4 +479,5 @@ Router.run(routes, function(Handler) {
 	React.render(<Handler flux={flux} />, appElement);
 });
 
+flux.actions.loadName();
 flux.actions.loadMoreDays(stores.DayStore.next_url);

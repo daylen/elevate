@@ -10,6 +10,12 @@ var logger = require('../logger');
 var moment = require('moment-timezone');
 var querystring = require('querystring');
 
+router.get('/name', function(req, res, next) {
+	res.json({
+		name: globalConfig.name
+	});
+});
+
 router.get('/activity', function(req, res, next) {
 	var fromStr;
 	var toStr;
