@@ -409,7 +409,8 @@ var ActivityNugget = React.createClass({
 		return (
 			<div className="activity">
 				<h3>{activity.name}</h3>
-				<div className="activityNuggetContainer">
+				<div className="activityType"><b>{activity.type}</b>Started {moment(activity.start_date).format('h:mm A')}</div>
+				<div className="activityNuggetGrid">
 					<div className="activityNugget">
 						<div>{_metersToMiles(activity.distance).toFixed(1)}<small>mi</small></div>
 						<div className="label">Distance</div>
