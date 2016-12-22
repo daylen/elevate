@@ -1,8 +1,6 @@
 # Elevate
 
-Elevate is a personal fitness web dashboard that pulls in data from Fitbit, Jawbone, and Strava. You can see an example here:
-
-**[https://elevate.daylen.com/](https://elevate.daylen.com/)**
+Elevate is a personal fitness web dashboard that pulls in data from Fitbit, Jawbone, and Strava.
 
 Elevate is self-hosted and open-source (see the License section), so you can get your own Elevate, or help improve it!
 
